@@ -26,18 +26,21 @@
   :focus-visible{outline:2px solid var(--amber); outline-offset:3px;}
 
   header.nav{position:fixed; top:0; left:0; right:0; z-index:50; padding-top: env(safe-area-inset-top,0px); background:rgba(20,20,28,0.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line);}
-  .nav-inner{max-width:1160px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; justify-content:space-between; gap:20px;}
+  .nav-inner{position:relative; max-width:1160px; margin:0 auto; padding:16px 28px; display:flex; align-items:center; justify-content:space-between; gap:20px;}
   .mark{font-family:'Unbounded'; font-weight:800; font-size:19px; letter-spacing:-0.02em; display:flex; align-items:baseline; gap:2px;}
   .mark span{color:var(--coral);}
+  .nav-drawer{display:flex; align-items:center; gap:18px;}
   nav.links{display:flex; gap:28px; align-items:center;}
   nav.links a{font-size:14.5px; font-weight:500; text-decoration:none; color:var(--text-ink-dim); transition:color .15s ease;}
   nav.links a:hover{color:var(--text-ink);}
   .lang-toggle{display:flex; align-items:center; background:rgba(239,236,228,0.08); border:1px solid var(--line); border-radius:999px; padding:3px;}
   .lang-toggle button{border:none; background:transparent; color:var(--text-ink-dim); font-size:12.5px; font-weight:700; padding:6px 13px; border-radius:999px; letter-spacing:0.03em;}
   .lang-toggle button.active{background:var(--coral); color:#14141c;}
-  .nav-cta{background:var(--amber); color:#14141c; font-weight:700; font-size:14px; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap;}
+  .nav-cta{background:var(--amber); color:#14141c; font-weight:700; font-size:14px; padding:9px 18px; border-radius:999px; text-decoration:none; white-space:nowrap; border:none;}
   .nav-linkedin{color:var(--text-ink-dim); font-size:13.5px; font-weight:600; text-decoration:none; white-space:nowrap;}
   .nav-linkedin:hover{color:var(--text-ink);}
+  .nav-toggle{display:none; background:none; border:none; color:var(--text-ink); width:36px; height:36px; align-items:center; justify-content:center; border-radius:8px; padding:0;}
+  .nav-toggle:hover{background:rgba(239,236,228,0.08);}
 
   /* ---------- HERO ---------- */
   .hero{padding: calc(150px + env(safe-area-inset-top,0px)) 0 110px; position:relative; overflow:hidden; background: var(--ink);}
@@ -145,10 +148,28 @@
   footer h2{font-size:clamp(2rem,4.2vw,3.1rem); max-width:16ch; margin:0 auto;}
   footer p.lede{color:var(--text-ink-dim); margin:20px auto 36px; max-width:46ch; font-size:16.5px;}
   .footer-ctas{display:flex; justify-content:center; gap:14px; flex-wrap:wrap;}
+  .contact-methods{display:flex; justify-content:center; gap:14px; flex-wrap:wrap;}
+  .contact-methods .btn{border:none;}
+  .cf-alt{margin-top:20px; font-size:13.5px; color:var(--text-ink-dim); text-align:center;}
+  .cf-alt a{color:var(--amber); text-decoration:none;}
+  .cf-alt a:hover{text-decoration:underline;}
   .footer-meta{margin-top:80px; padding-top:24px; border-top:1px solid var(--line); display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:13px; color:var(--text-ink-dim);}
 
   @media (max-width: 880px){
-    nav.links{display:none;}
+    .nav-toggle{display:flex;}
+    .nav-drawer{
+      position:absolute; top:100%; left:0; right:0;
+      background:rgba(20,20,28,0.97); backdrop-filter:blur(10px);
+      flex-direction:column; align-items:stretch; gap:4px;
+      padding:6px 28px 22px; border-bottom:1px solid var(--line);
+      max-height:0; overflow:hidden; opacity:0;
+      transition:max-height .28s ease, opacity .2s ease;
+    }
+    .nav-drawer.open{max-height:420px; opacity:1;}
+    .nav-drawer nav.links{flex-direction:column; align-items:stretch; gap:0; width:100%;}
+    .nav-drawer nav.links a{padding:13px 0; border-bottom:1px solid var(--line); width:100%;}
+    .nav-drawer .nav-linkedin{padding:13px 0; border-bottom:1px solid var(--line);}
+    .nav-drawer .lang-toggle{margin-top:12px; align-self:flex-start;}
     .hero{padding-top: calc(120px + env(safe-area-inset-top,0px)); padding-bottom:80px;}
     .hero-grid{grid-template-columns:1fr; gap:40px;}
     .hero-carousel{aspect-ratio:16/10;}
@@ -156,9 +177,13 @@
     .about-top{grid-template-columns:1fr; gap:40px;}
     .skills-columns{grid-template-columns:1fr; gap:30px;}
     section{padding:64px 0;}
+    .stats-grid{grid-template-columns:repeat(2,1fr); row-gap:32px; gap:24px;}
     .footer-meta{flex-direction:column; text-align:center; align-items:center;}
   }
-  @media (max-width: 520px){ .wrap{padding:0 20px;} }
+  @media (max-width: 520px){
+    .wrap{padding:0 20px;}
+    .stats-grid{grid-template-columns:1fr; row-gap:28px;}
+  }
 </style>
 </head>
 <body>
@@ -166,19 +191,23 @@
 <header class="nav">
   <div class="nav-inner">
     <div class="mark">Lucas<span>.</span>Solarte</div>
-    <nav class="links">
-      <a href="#proyectos" data-i18n="nav_work">Proyectos</a>
-      <a href="#sobre-mi" data-i18n="nav_about">Sobre mí</a>
-      <a href="#contacto" data-i18n="nav_contact">Contacto</a>
-    </nav>
-    <div style="display:flex; align-items:center; gap:18px;">
+    <button class="nav-toggle" id="navToggleBtn" onclick="toggleNav()" aria-label="Abrir menú" aria-expanded="false" aria-controls="navDrawer">
+      <svg id="navIconBurger" width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg id="navIconClose" width="22" height="22" viewBox="0 0 22 22" fill="none" style="display:none;"><path d="M5 5l12 12M17 5L5 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <div class="nav-drawer" id="navDrawer">
+      <nav class="links">
+        <a href="#proyectos" data-i18n="nav_work">Proyectos</a>
+        <a href="#sobre-mi" data-i18n="nav_about">Sobre mí</a>
+        <a href="#contacto" data-i18n="nav_contact">Contacto</a>
+      </nav>
       <a href="https://www.linkedin.com/in/lucas-solarte/" target="_blank" rel="noopener" class="nav-linkedin" data-i18n="nav_linkedin">LinkedIn</a>
       <div class="lang-toggle" role="group" aria-label="Idioma / Language">
         <button id="btn-es" onclick="setLang('es')" aria-pressed="true">ES</button>
         <button id="btn-en" onclick="setLang('en')" aria-pressed="false">EN</button>
       </div>
-      <a class="nav-cta" href="mailto:cymslucas4@gmail.com" data-i18n="nav_cta">Escríbeme</a>
     </div>
+    <a class="nav-cta" href="#contacto" data-i18n="nav_cta">Contáctame</a>
   </div>
 </header>
 
@@ -190,7 +219,7 @@
       <p class="lede" data-i18n="hero_lede">Contenido y campañas con resultados reales. Contáctate conmigo.</p>
       <div class="hero-ctas">
         <a class="btn btn-primary" href="#proyectos" data-i18n="hero_cta1">Ver proyectos</a>
-        <a class="btn btn-ghost" href="mailto:cymslucas4@gmail.com" data-i18n="hero_cta2">Escribir un correo</a>
+        <a class="btn btn-ghost" href="#contacto" data-i18n="hero_cta2">Contáctame</a>
       </div>
     </div>
     <div class="hero-carousel" id="heroCarousel">
@@ -367,8 +396,14 @@
   <div class="wrap">
     <h2 data-i18n="footer_h2">Hablemos de tu próxima campaña.</h2>
     <p class="lede" data-i18n="footer_p">Disponible para trabajo remoto, freelance o por proyecto en marketing digital y creación de contenido.</p>
-    <div class="footer-ctas">
-      <a class="btn btn-primary" href="mailto:cymslucas4@gmail.com?subject=Hablemos%20de%20marketing" data-i18n="footer_cta1">cymslucas4@gmail.com</a>
+    <div class="contact-methods">
+      <button type="button" class="btn btn-primary" onclick="copyEmail()">
+        <span id="copyEmailLabel" data-i18n="cf_copy">Copiar mi correo</span>
+      </button>
+      <a class="btn btn-ghost" href="https://wa.me/573132059280?text=Hola%20Lucas%2C%20vi%20tu%20portafolio%20y%20quiero%20hablar%20sobre%20una%20oportunidad." target="_blank" rel="noopener" data-i18n="cf_whatsapp">Escribir por WhatsApp</a>
+    </div>
+    <p class="cf-alt" data-i18n="cf_alt">También puedes escribir directo a <a href="mailto:cymslucas4@gmail.com">cymslucas4@gmail.com</a></p>
+    <div class="footer-ctas" style="margin-top:28px;">
       <a class="btn btn-ghost" href="https://www.linkedin.com/in/lucas-solarte/" target="_blank" rel="noopener" data-i18n="linkedin_btn">Ver LinkedIn</a>
       <button class="btn btn-ghost" type="button" onclick="downloadCV('es')" data-i18n="cv_es_btn">Descargar CV (ES)</button>
       <button class="btn btn-ghost" type="button" onclick="downloadCV('en')" data-i18n="cv_en_btn">Download CV (EN)</button>
@@ -383,11 +418,11 @@
 <script>
 const i18n = {
   es: {
-    nav_work:"Proyectos", nav_about:"Sobre mí", nav_contact:"Contacto", nav_cta:"Escríbeme",
+    nav_work:"Proyectos", nav_about:"Sobre mí", nav_contact:"Contacto", nav_cta:"Contáctame",
     hero_eyebrow:"Marketing digital & contenido — Bogotá, Colombia",
     hero_h1:"Crece tu negocio con marketing digital.",
     hero_lede:"Contenido y campañas con resultados reales. Contáctate conmigo.",
-    hero_cta1:"Ver proyectos", hero_cta2:"Escribir un correo",
+    hero_cta1:"Ver proyectos", hero_cta2:"Contáctame",
     hero_carousel_cap:"Trabajo reciente",
     stat1:"crecimiento de seguidores en EWA Store", stat2:"vistas en un reel viral",
     stat3:"de 2.773 restaurantes en Tripadvisor (Vancouver)", stat4:"de calificación, 1.956 reseñas",
@@ -422,17 +457,20 @@ const i18n = {
     footer_h2:"Hablemos de tu próxima campaña.",
     footer_p:"Disponible para trabajo remoto, freelance o por proyecto en marketing digital y creación de contenido.",
     footer_cta1:"cymslucas4@gmail.com",
+    cf_copy:"Copiar mi correo", cf_copied:"¡Correo copiado!", cf_copy_manual:"Copia mi correo:",
+    cf_whatsapp:"Escribir por WhatsApp",
+    cf_alt:'También puedes escribir directo a <a href="mailto:cymslucas4@gmail.com">cymslucas4@gmail.com</a>',
     nav_linkedin:"LinkedIn", linkedin_btn:"Ver LinkedIn",
     cv_es_btn:"Descargar CV (ES)", cv_en_btn:"Descargar CV (EN)",
     footer_left:"Lucas Solarte — Marketing Digital & Contenido",
     footer_right:"Bogotá, Colombia — disponible en remoto",
   },
   en: {
-    nav_work:"Projects", nav_about:"About", nav_contact:"Contact", nav_cta:"Email me",
+    nav_work:"Projects", nav_about:"About", nav_contact:"Contact", nav_cta:"Contact me",
     hero_eyebrow:"Digital marketing & content — Bogotá, Colombia",
     hero_h1:"Grow your business with digital marketing.",
     hero_lede:"Content and campaigns with real results. Get in touch with me.",
-    hero_cta1:"See projects", hero_cta2:"Send an email",
+    hero_cta1:"See projects", hero_cta2:"Contact me",
     hero_carousel_cap:"Recent work",
     stat1:"follower growth at EWA Store", stat2:"views on a viral reel",
     stat3:"of 2,773 restaurants on Tripadvisor (Vancouver)", stat4:"rating, 1,956 reviews",
@@ -467,6 +505,9 @@ const i18n = {
     footer_h2:"Let's talk about your next campaign.",
     footer_p:"Available for remote, freelance, or project-based work in digital marketing and content creation.",
     footer_cta1:"cymslucas4@gmail.com",
+    cf_copy:"Copy my email", cf_copied:"Email copied!", cf_copy_manual:"Copy my email:",
+    cf_whatsapp:"Message on WhatsApp",
+    cf_alt:'You can also write directly to <a href="mailto:cymslucas4@gmail.com">cymslucas4@gmail.com</a>',
     nav_linkedin:"LinkedIn", linkedin_btn:"View LinkedIn",
     cv_es_btn:"Descargar CV (ES)", cv_en_btn:"Download CV (EN)",
     footer_left:"Lucas Solarte — Digital Marketing & Content",
@@ -501,6 +542,43 @@ async function downloadCV(which){
   }
 }
 
+function toggleNav(forceClose){
+  const drawer = document.getElementById('navDrawer');
+  const btn = document.getElementById('navToggleBtn');
+  const burger = document.getElementById('navIconBurger');
+  const close = document.getElementById('navIconClose');
+  const isOpen = forceClose === true ? false : !drawer.classList.contains('open');
+  drawer.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  burger.style.display = isOpen ? 'none' : 'block';
+  close.style.display = isOpen ? 'block' : 'none';
+}
+document.addEventListener('DOMContentLoaded', function(){
+  const drawer = document.getElementById('navDrawer');
+  if(drawer){
+    drawer.addEventListener('click', function(e){
+      if(e.target.tagName === 'A'){ toggleNav(true); }
+    });
+  }
+});
+
+function copyEmail(){
+  const email = 'cymslucas4@gmail.com';
+  const lang = (document.documentElement.lang === 'en') ? 'en' : 'es';
+  const label = document.getElementById('copyEmailLabel');
+  function showCopied(){
+    if(label){
+      label.textContent = i18n[lang].cf_copied;
+      setTimeout(()=>{ label.textContent = i18n[lang].cf_copy; }, 2200);
+    }
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(email).then(showCopied).catch(()=>{ window.prompt(i18n[lang].cf_copy_manual, email); });
+  }else{
+    window.prompt(i18n[lang].cf_copy_manual, email);
+  }
+}
+
 function animateHeroTitle(){
   const h1 = document.querySelector('.hero h1');
   if(!h1) return;
@@ -515,6 +593,11 @@ function setLang(lang){
     const key = el.getAttribute('data-i18n');
     const val = i18n[lang][key];
     if(val !== undefined) el.innerHTML = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    const key = el.getAttribute('data-i18n-placeholder');
+    const val = i18n[lang][key];
+    if(val !== undefined) el.setAttribute('placeholder', val);
   });
   animateHeroTitle();
   document.getElementById('btn-es').classList.toggle('active', lang==='es');
